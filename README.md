@@ -2,7 +2,7 @@
 
 A controlled extension model for future Brightdesk integrations.
 
-<badge>Bootstrap repository — implementation not yet present</badge>
+> **Status:** Bootstrap repository — implementation not yet present.
 
 ## Purpose
 
