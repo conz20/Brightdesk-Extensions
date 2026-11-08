@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:brightdesk:extension-manifest:1",
+  "title": "Brightdesk Extension Manifest",
+  "description": "Declarative metadata for optional Brightdesk extensions. A valid manifest does not authorize or execute the extension code.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "id", "name", "version", "description", "publisher", "apiVersion", "supportedProducts", "entrypoint", "permissions", "license"],
+  "properties": {
+    "manifestVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "url"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "url": { "type": "string", "format": "uri", "pattern": "^https://" }
+      }
+    },
+    "apiVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "supportedProducts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["suite", "pages", "sheets", "decks", "notes", "database", "forms", "lists", "planner", "todo", "workspace"] }
+    },
+    "entrypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "path"],
+      "properties": {
+        "type": { "const": "javascript" },
+        "path": { "type": "string", "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_/-]+\\.(js|mjs)$" }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "reason"],
+        "properties": {
+          "id": { "enum": ["workspace.read", "workspace.write", "documents.read", "documents.write", "clipboard.read", "clipboard.write", "network.fetch", "notifications.create"] },
+          "reason": { "type": "string", "minLength": 1, "maxLength": 240 }
+        }
+      }
+    },
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spdxId", "textFile"],
+      "properties": {
+        "spdxId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9.+-]*$" },
+        "textFile": { "type": "string", "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_./-]+$" }
+      }
+    }
+  }
+}
