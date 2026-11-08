@@ -1,49 +1,51 @@
-# Brightdesk-Extensions
+# Brightdesk Extensions
 
-Extension contracts and compatibility for the private Brightdesk ecosystem.
+A controlled, permission-first extension contract for future Brightdesk integrations.
 
-## Purpose and ownership
+> **Status:** Initial manifest schema and static validator implemented. No extension runtime, loader, marketplace or package distribution is implemented. The example entrypoint is never executed.
 
-Owns extension manifests, permission declarations, lifecycle hooks, SDK contracts, compatibility rules and extension validation. Extensions must use explicit permissions and must not gain access to private data by default.
+## Implemented foundation
 
-## Current verified status
+- `schemas/extension-manifest.schema.json` defines version 1 of the manifest contract.
+- `scripts/verify-extension-manifest.mjs` checks required metadata, semantic version, HTTPS publisher URL, supported products, JavaScript-only entrypoints, explicit permission reasons, allowlisted permission IDs, local licence text and safe package-contained paths.
+- Native and binary entrypoints are rejected. Entrypoint and licence files must be regular files, cannot traverse outside the package and cannot resolve through symbolic links.
+- `test/extension-manifest.test.mjs` provides nine regression tests for valid manifests, dangerous/unknown permissions, missing reasons, duplicate permissions, unsupported products, unsafe/missing entrypoints, native-code rejection, missing licence files, unexpected properties and symlink safety.
+- `examples/basic-extension/` contains a static example manifest, source stub and MIT licence text. The source stub is not loaded or executed.
+- `.github/workflows/quality.yml` runs on Node.js 24.22.2 with pinned actions.
 
-As of 7 November 2026, this repository has been created and is private. Its root currently contains only this README. No source implementation, package, published release, reusable service or passing test suite has been verified in this repository. The descriptions below are the intended scope, not a claim that these capabilities are already implemented.
+## Commands
 
-## First implementation stage
+~~~sh
+npm ci --no-audit --no-fund
+npm run check:node
+npm run check
+npm test
+~~~
 
-Proposed first deliverables: manifest schema, permission model, lifecycle contract, compatibility matrix and security tests. No extension runtime is claimed yet.
+To verify the sample package from this repository root:
 
-## Ecosystem connections
+~~~sh
+cd examples/basic-extension
+node ../../scripts/verify-extension-manifest.mjs
+~~~
 
-The customer-facing desktop experience is coordinated by [Brightdesk Office Suite](https://github.com/connormolloy12/Brightdesk-suite). The ten products remain in their own repositories:
+## Permission contract
 
-- [Brightdesk Pages](https://github.com/connormolloy12/Brightdesk-Pages)
-- [Brightdesk Sheets](https://github.com/connormolloy12/Brightdesk-Sheets)
-- [Brightdesk Decks](https://github.com/connormolloy12/Brightdesk-Decks)
-- [Brightdesk Notes](https://github.com/connormolloy12/Brightdesk-Notes)
-- [Brightdesk Database](https://github.com/connormolloy12/Brightdesk-Database)
-- [Brightdesk Forms](https://github.com/connormolloy12/Brightdesk-Forms)
-- [Brightdesk Lists](https://github.com/connormolloy12/Brightdesk-Lists)
-- [Brightdesk Planner](https://github.com/connormolloy12/Brightdesk-Planner)
-- [Brightdesk To Do](https://github.com/connormolloy12/Brightdesk-To-Do)
-- [Brightdesk Workspace](https://github.com/connormolloy12/Brightdesk-Workspace)
+A manifest must request each permission explicitly and provide a reason for that request. The current allowlist is deliberately narrow: workspace read/write, document read/write, clipboard read/write, network fetch and notifications. Unrecognised permissions are rejected. Empty permission arrays are valid and grant no access.
 
-[Brightdesk-AI](https://github.com/connormolloy12/Brightdesk-AI) is the separate private engineering control plane. This repository must not depend on AI being available at runtime. AI-specific models, prompts, agent orchestration and AI tests belong in Brightdesk-AI.
+Permission names are declarations, not enforcement. No extension is loaded, executed or granted these capabilities by this repository. A future host runtime must implement user consent, capability enforcement, isolation, resource limits, lifecycle handling and revocation before any extension code can run.
 
-The shared architecture and dependency rules are documented in the [Brightdesk developer ecosystem architecture](https://github.com/connormolloy12/Brightdesk-suite/blob/main/docs/DEVELOPER_ECOSYSTEM_ARCHITECTURE.md).
+## Security and release gates
 
-## Engineering rules
+- No broad filesystem, shell, process, native-module or unrestricted system access is accepted by this manifest contract.
+- No untrusted native code is loaded in-process.
+- Publisher URL and name are declarative metadata only; they do not establish identity or trust.
+- Signature/provenance verification, package isolation, host compatibility enforcement and a runtime permission broker remain unimplemented.
+- The example is test data, not an approved distributable extension.
+- Do not publish or integrate extensions until manifest validation, licence review, signature verification, runtime isolation and end-to-end permission-denial tests are complete.
 
-- Preserve existing implementations and programming languages across the ecosystem; do not standardise by deleting or rewriting language choices.
-- Keep Rust supported where the component requires native/core functionality.
-- Use versioned, documented interfaces. Shared repositories must not depend on product repositories.
-- Add tests before implementing new behaviour and run the repository's full checks before proposing integration.
-- Keep repositories private and use least-privilege access.
-- Review third-party licences before adding code, fonts, icons or other assets.
-- Do not add paid services, metered APIs or paid build infrastructure without separate approval.
-- Do not publish a release or merge integration changes automatically.
+## Boundaries
 
-## Planned repository
+Brightdesk products own their extension host integration and user experience. Brightdesk Extensions owns the shared manifest and compatibility contracts. AI-specific orchestration stays in Brightdesk-AI. The extension model must not introduce paid services, customer accounts or online dependencies into otherwise local product workflows.
 
-[Brightdesk-Release-Tools](https://github.com/connormolloy12/Brightdesk-Release-Tools) is still awaiting creation. It is not a dependency for this repository's first implementation stage.
+The [Brightdesk developer ecosystem architecture](https://github.com/connormolloy12/Brightdesk-suite/blob/main/docs/DEVELOPER_ECOSYSTEM_ARCHITECTURE.md) remains the source for repository ownership and dependency rules.
