@@ -45,6 +45,14 @@ test('unknown or dangerous permissions are rejected', t => {
   assert.throws(() => verifyExtensionManifest({ rootDir }), /permission is not allowlisted/i);
 });
 
+test('unrestricted network access is not an available extension permission', t => {
+  const rootDir = fixture(t, manifest => {
+    manifest.permissions = [{ id: 'network.fetch', reason: 'Fetch remote content.' }];
+    return manifest;
+  });
+  assert.throws(() => verifyExtensionManifest({ rootDir }), /permission is not allowlisted/i);
+});
+
 test('permission declarations require a non-empty reason', t => {
   const rootDir = fixture(t, manifest => {
     manifest.permissions[0].reason = '  ';
