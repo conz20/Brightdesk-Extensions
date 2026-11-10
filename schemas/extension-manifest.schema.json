@@ -45,7 +45,7 @@
         "additionalProperties": false,
         "required": ["id", "reason"],
         "properties": {
-          "id": { "enum": ["workspace.read", "workspace.write", "documents.read", "documents.write", "clipboard.read", "clipboard.write", "network.fetch", "notifications.create"] },
+          "id": { "enum": ["workspace.read", "workspace.write", "documents.read", "documents.write", "clipboard.read", "clipboard.write", "notifications.create"] },
           "reason": { "type": "string", "minLength": 1, "maxLength": 240 }
         }
       }

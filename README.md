@@ -31,7 +31,7 @@ node ../../scripts/verify-extension-manifest.mjs
 
 ## Permission contract
 
-A manifest must request each permission explicitly and provide a reason for that request. The current allowlist is deliberately narrow: workspace read/write, document read/write, clipboard read/write, network fetch and notifications. Unrecognised permissions are rejected. Empty permission arrays are valid and grant no access.
+A manifest must request each permission explicitly and provide a reason for that request. The current allowlist is deliberately narrow: workspace read/write, document read/write, clipboard read/write and local notifications. No network permission is available to extensions; customer network access remains restricted to official Brightdesk product updates and approved language resources. Unrecognised permissions are rejected. Empty permission arrays are valid and grant no access.
 
 Permission names are declarations, not enforcement. No extension is loaded, executed or granted these capabilities by this repository. A future host runtime must implement user consent, capability enforcement, isolation, resource limits, lifecycle handling and revocation before any extension code can run.
 

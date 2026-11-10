@@ -13,7 +13,6 @@ const PERMISSIONS = new Set([
   'documents.write',
   'clipboard.read',
   'clipboard.write',
-  'network.fetch',
   'notifications.create'
 ]);
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
