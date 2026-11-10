@@ -8,8 +8,8 @@ import { verifyExtensionManifest } from '../scripts/verify-extension-manifest.mj
 function fixture(t, permission) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brightdesk-extension-network-'));
   fs.mkdirSync(path.join(root, 'src'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'src/index.js'), 'export function activate() {}\\n');
-  fs.writeFileSync(path.join(root, 'LICENSE.txt'), 'MIT License\\n');
+  fs.writeFileSync(path.join(root, 'src/index.js'), 'export function activate() {}\n');
+  fs.writeFileSync(path.join(root, 'LICENSE.txt'), 'MIT License\n');
   fs.writeFileSync(path.join(root, 'extension.json'), JSON.stringify({
     manifestVersion: 1,
     id: 'sample-extension',
