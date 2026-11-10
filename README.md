@@ -48,4 +48,4 @@ Permission names are declarations, not enforcement. No extension is loaded, exec
 
 Brightdesk products own their extension host integration and user experience. Brightdesk Extensions owns the shared manifest and compatibility contracts. AI-specific orchestration stays in Brightdesk-AI. The extension model must not introduce paid services, customer accounts or online dependencies into otherwise local product workflows.
 
-The [Brightdesk developer ecosystem architecture](https://github.com/connormolloy12/Brightdesk-suite/blob/main/docs/DEVELOPER_ECOSYSTEM_ARCHITECTURE.md) remains the source for repository ownership and dependency rules.
+The [Brightdesk developer ecosystem architecture](https://github.com/conz20/Brightdesk-suite/blob/main/docs/DEVELOPER_ECOSYSTEM_ARCHITECTURE.md) remains the source for repository ownership and dependency rules.
