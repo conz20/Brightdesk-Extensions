@@ -122,3 +122,18 @@ test('symbolic links are rejected for entrypoints and licence files', t => {
   fs.writeFileSync(path.join(rootDir, 'extension.json'), JSON.stringify(manifest));
   assert.throws(() => verifyExtensionManifest({ rootDir }), /symbolic link/i);
 });
+
+
+test('Windows drive paths are rejected as package file paths on every platform', t => {
+  const driveAbsolute = fixture(t, manifest => {
+    manifest.entrypoint.path = 'C:/Windows/System32/evil.js';
+    return manifest;
+  });
+  assert.throws(() => verifyExtensionManifest({ rootDir: driveAbsolute }), /must remain inside the extension package/i);
+
+  const driveRelative = fixture(t, manifest => {
+    manifest.entrypoint.path = 'C:outside.js';
+    return manifest;
+  });
+  assert.throws(() => verifyExtensionManifest({ rootDir: driveRelative }), /must remain inside the extension package/i);
+});
