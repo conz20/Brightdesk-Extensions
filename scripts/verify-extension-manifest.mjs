@@ -45,7 +45,7 @@ function requireHttps(value, label) {
 
 function resolvePackageFile(rootDir, relativePath, label) {
   const raw = requireText(relativePath, label);
-  if (raw.includes('\\') || path.posix.isAbsolute(raw) || raw.split('/').includes('..')) {
+  if (raw.includes('\\') || /^[A-Za-z]:/.test(raw) || path.posix.isAbsolute(raw) || path.win32.isAbsolute(raw) || raw.split('/').includes('..')) {
     fail(label + ' must remain inside the extension package.');
   }
   const segments = raw.split('/');
