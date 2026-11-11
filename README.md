@@ -9,7 +9,7 @@ A controlled, permission-first extension contract for future Brightdesk integrat
 - `schemas/extension-manifest.schema.json` defines version 1 of the manifest contract.
 - `scripts/verify-extension-manifest.mjs` checks required metadata, semantic version, HTTPS publisher URL, supported products, JavaScript-only entrypoints, explicit permission reasons, allowlisted permission IDs, local licence text and safe package-contained paths.
 - Native and binary entrypoints are rejected. Entrypoint and licence files must be regular files, cannot traverse outside the package and cannot resolve through symbolic links.
-- `test/extension-manifest.test.mjs` provides nine regression tests for valid manifests, dangerous/unknown permissions, missing reasons, duplicate permissions, unsupported products, unsafe/missing entrypoints, native-code rejection, missing licence files, unexpected properties and symlink safety.
+- `test/extension-manifest.test.mjs` provides eleven regression tests for valid manifests, dangerous/unknown permissions, missing reasons, duplicate permissions, unsupported products, unsafe/missing entrypoints, native-code rejection, missing licence files, unexpected properties and symlink safety.
 - `examples/basic-extension/` contains a static example manifest, source stub and MIT licence text. The source stub is not loaded or executed.
 - `.github/workflows/quality.yml` runs on Node.js 24.22.2 with pinned actions.
 
