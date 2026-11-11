@@ -1,31 +1,29 @@
 # Brightdesk Extensions
 
-A controlled extension model for future Brightdesk integrations.
+## Repository purpose
 
-> **Status:** Bootstrap repository — implementation not yet present.
-
-## Purpose
-
-Define how optional extensions can add capabilities without weakening product security, stability, local data ownership or the consistent Brightdesk experience.
+A controlled extension manifest and permission model for future Brightdesk integrations.
 
 ## Current status
 
-The verified repository currently contains only this README. No extension manifest, SDK, loader, permission model, sample extension or compatibility tests have been confirmed.
+Bootstrap scope recorded; manifest and permission foundations are under development on the existing draft pull request.
 
-## Planned foundations
+## Immediate engineering goals
 
-- Versioned extension manifest and metadata schema.
-- Explicit permissions for file access, network access and product capabilities.
-- Lifecycle contracts for discovery, enable, disable, update and removal.
-- Compatibility declarations for Suite and product versions.
-- Signed or otherwise verifiable package provenance before distribution.
-- Extension isolation, resource limits and safe failure behaviour.
-- Developer documentation and a minimal sample extension.
+Define a versioned manifest schema, capability allowlist, validation, compatibility rules, and negative tests for undeclared permissions.
 
-## Safety rules
+## Scope and safety boundaries
 
-Extensions are disabled unless the user enables them. Never grant broad file or network access by default. Do not load untrusted native code in-process. AI providers and agents are not extensions by default; AI-specific implementation remains in Brightdesk-AI.
+No extension may bypass local-first operation, introduce accounts or telemetry, or add network access without an explicitly approved Brightdesk-controlled use.
 
-## Initial acceptance gate
+## Supported development platforms
 
-Write and validate the manifest schema before implementing a loader. Add tests for invalid manifests, denied permissions, version mismatch and extension failure. Only then build a sample extension and integrate it into a test environment.
+Brightdesk customer software is desktop-only: Windows, macOS, and Linux. This repository does not create Android, iPhone, iPad, or other mobile editions.
+
+## Contribution and completion standard
+
+Work is developed on a feature branch and reviewed through a pull request. Do not merge unverified changes or bypass required checks. Keep tests, documentation, and implementation aligned. Mark work complete only when the relevant current commit has passed its required verification.
+
+## Brightdesk portfolio
+
+This repository is part of the Brightdesk engineering portfolio. The customer suite contains exactly ten products: Pages, Sheets, Decks, Notes, Database, Forms, Lists, Planner, To Do, and Workspace. Brightdesk-AI and shared engineering repositories are not additional customer products.
