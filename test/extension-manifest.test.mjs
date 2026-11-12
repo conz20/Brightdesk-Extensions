@@ -185,3 +185,26 @@ test('manifest JSON Schema rejects malformed SemVer identifiers', () => {
   }
   assert.equal(versionPattern.test('1.2.3-alpha.1+build.007'), true);
 });
+
+test('a symbolic-link package root is rejected', t => {
+  const rootDir = fixture(t);
+  const aliasPath = path.join(path.dirname(rootDir), path.basename(rootDir) + '-alias');
+  fs.symlinkSync(rootDir, aliasPath, 'dir');
+  t.after(() => fs.rmSync(aliasPath, { force: true }));
+  assert.throws(
+    () => verifyExtensionManifest({ rootDir: aliasPath }),
+    /package root.*symbolic link/i
+  );
+});
+
+test('a symbolic-link extension.json manifest is rejected', t => {
+  const rootDir = fixture(t);
+  const manifestPath = path.join(rootDir, 'extension.json');
+  const actualManifestPath = path.join(rootDir, 'extension-manifest-copy.json');
+  fs.renameSync(manifestPath, actualManifestPath);
+  fs.symlinkSync(actualManifestPath, manifestPath, 'file');
+  assert.throws(
+    () => verifyExtensionManifest({ rootDir }),
+    /extension\.json.*symbolic link/i
+  );
+});
