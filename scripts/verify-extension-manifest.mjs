@@ -85,7 +85,19 @@ function verifyPermissionList(permissions) {
 
 export function verifyExtensionManifest({ rootDir = DEFAULT_ROOT } = {}) {
   const absoluteRoot = path.resolve(rootDir);
+  let rootStat;
+  try { rootStat = fs.lstatSync(absoluteRoot); }
+  catch (error) { fail('extension package root cannot be accessed: ' + error.message); }
+  if (rootStat.isSymbolicLink()) fail('extension package root must not be a symbolic link.');
+  if (!rootStat.isDirectory()) fail('extension package root must be a directory.');
+
   const manifestPath = path.join(absoluteRoot, 'extension.json');
+  let manifestStat;
+  try { manifestStat = fs.lstatSync(manifestPath); }
+  catch (error) { fail('cannot read extension.json: ' + error.message); }
+  if (manifestStat.isSymbolicLink()) fail('extension.json must not be a symbolic link.');
+  if (!manifestStat.isFile()) fail('extension.json must be a regular file.');
+
   let manifest;
   try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); }
   catch (error) { fail('cannot read extension.json: ' + error.message); }
