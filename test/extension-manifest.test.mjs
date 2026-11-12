@@ -137,3 +137,51 @@ test('Windows drive paths are rejected as package file paths on every platform',
   });
   assert.throws(() => verifyExtensionManifest({ rootDir: driveRelative }), /must remain inside the extension package/i);
 });
+
+
+test('runtime validator rejects malformed SemVer prerelease and build identifiers', t => {
+  const invalidVersions = [
+    '1.2.3-01',
+    '1.2.3-0.01',
+    '1.2.3-alpha..beta',
+    '1.2.3+build..7'
+  ];
+
+  for (const version of invalidVersions) {
+    const rootDir = fixture(t, manifest => {
+      manifest.version = version;
+      return manifest;
+    });
+    assert.throws(
+      () => verifyExtensionManifest({ rootDir }),
+      /manifest\.version must be a valid semantic version/i,
+      `runtime validator accepted invalid SemVer: ${version}`
+    );
+  }
+
+  const validVersion = '1.2.3-alpha.1+build.007';
+  const validRoot = fixture(t, manifest => {
+    manifest.version = validVersion;
+    return manifest;
+  });
+  assert.equal(verifyExtensionManifest({ rootDir: validRoot }).version, validVersion);
+});
+
+test('manifest JSON Schema rejects malformed SemVer identifiers', () => {
+  const schema = JSON.parse(fs.readFileSync(
+    new URL('../schemas/extension-manifest.schema.json', import.meta.url),
+    'utf8'
+  ));
+  const versionPattern = new RegExp(schema.properties.version.pattern);
+  const invalidVersions = [
+    '1.2.3-01',
+    '1.2.3-0.01',
+    '1.2.3-alpha..beta',
+    '1.2.3+build..7'
+  ];
+
+  for (const version of invalidVersions) {
+    assert.equal(versionPattern.test(version), false, `schema accepted invalid SemVer: ${version}`);
+  }
+  assert.equal(versionPattern.test('1.2.3-alpha.1+build.007'), true);
+});
