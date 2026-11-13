@@ -208,3 +208,69 @@ test('a symbolic-link extension.json manifest is rejected', t => {
     /extension\.json.*symbolic link/i
   );
 });
+
+test('runtime validator enforces the schema maximum lengths for text fields', t => {
+  const cases = [
+    {
+      label: 'manifest.name',
+      mutate: manifest => { manifest.name = 'N'.repeat(101); }
+    },
+    {
+      label: 'manifest.description',
+      mutate: manifest => { manifest.description = 'D'.repeat(241); }
+    },
+    {
+      label: 'manifest.publisher.name',
+      mutate: manifest => { manifest.publisher.name = 'P'.repeat(101); }
+    },
+    {
+      label: 'permissions[0].reason',
+      mutate: manifest => { manifest.permissions[0].reason = 'R'.repeat(241); }
+    }
+  ];
+
+  for (const scenario of cases) {
+    const rootDir = fixture(t, manifest => {
+      scenario.mutate(manifest);
+      return manifest;
+    });
+    assert.throws(
+      () => verifyExtensionManifest({ rootDir }),
+      /must be no more than/i,
+      scenario.label + ' must match its JSON Schema maxLength'
+    );
+  }
+});
+
+test('runtime validator enforces the schema path character rules for entrypoints and licence files', t => {
+  const unsafeEntrypoint = fixture(t, manifest => {
+    manifest.entrypoint.path = 'src folder/index.js';
+    return manifest;
+  });
+  fs.mkdirSync(path.join(unsafeEntrypoint, 'src folder'));
+  fs.writeFileSync(path.join(unsafeEntrypoint, 'src folder/index.js'), 'export {}\\n');
+  assert.throws(
+    () => verifyExtensionManifest({ rootDir: unsafeEntrypoint }),
+    /schema-approved path/i
+  );
+
+  const unsafeLicencePath = fixture(t, manifest => {
+    manifest.license.textFile = 'LICENSE copy.txt';
+    return manifest;
+  });
+  fs.writeFileSync(path.join(unsafeLicencePath, 'LICENSE copy.txt'), 'MIT License\\n');
+  assert.throws(
+    () => verifyExtensionManifest({ rootDir: unsafeLicencePath }),
+    /schema-approved path/i
+  );
+
+  const uppercaseExtension = fixture(t, manifest => {
+    manifest.entrypoint.path = 'src/index.JS';
+    return manifest;
+  });
+  fs.writeFileSync(path.join(uppercaseExtension, 'src/index.JS'), 'export {}\\n');
+  assert.throws(
+    () => verifyExtensionManifest({ rootDir: uppercaseExtension }),
+    /schema-approved path/i
+  );
+});
