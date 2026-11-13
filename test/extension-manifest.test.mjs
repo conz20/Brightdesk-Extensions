@@ -274,3 +274,23 @@ test('runtime validator enforces the schema path character rules for entrypoints
     /schema-approved path/i
   );
 });
+
+
+test('manifest JSON Schema rejects empty and dot path segments', () => {
+  const schema = JSON.parse(fs.readFileSync(
+    new URL('../schemas/extension-manifest.schema.json', import.meta.url),
+    'utf8'
+  ));
+  const entrypointPattern = new RegExp(schema.properties.entrypoint.properties.path.pattern);
+  const licencePattern = new RegExp(schema.properties.license.properties.textFile.pattern);
+
+  for (const value of ['src//index.js', 'src/./index.js', './src/index.js']) {
+    assert.equal(entrypointPattern.test(value), false, `schema accepted unsafe entrypoint path: ${value}`);
+  }
+  for (const value of ['licenses//MIT.txt', 'licenses/./MIT.txt', './LICENSE.txt']) {
+    assert.equal(licencePattern.test(value), false, `schema accepted unsafe licence path: ${value}`);
+  }
+
+  assert.equal(entrypointPattern.test('src/index.js'), true);
+  assert.equal(licencePattern.test('licenses/MIT.txt'), true);
+});
