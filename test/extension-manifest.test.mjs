@@ -320,3 +320,32 @@ test('runtime validation rejects whitespace-wrapped manifest tokens instead of n
     );
   }
 });
+
+
+test('extension.json cannot be replaced by a symbolic link between inspection and open', t => {
+  const rootDir = fixture(t);
+  const manifestPath = path.join(rootDir, 'extension.json');
+  const outsidePath = path.join(path.dirname(rootDir), 'outside-extension-manifest.json');
+  fs.writeFileSync(outsidePath, fs.readFileSync(manifestPath, 'utf8'));
+  const originalOpenSync = fs.openSync;
+  let replaced = false;
+
+  fs.openSync = function (filePath, flags, ...options) {
+    if (filePath === manifestPath && !replaced) {
+      fs.unlinkSync(manifestPath);
+      fs.symlinkSync(outsidePath, manifestPath, 'file');
+      replaced = true;
+    }
+    return originalOpenSync.call(fs, filePath, flags, ...options);
+  };
+
+  try {
+    assert.throws(
+      () => verifyExtensionManifest({ rootDir }),
+      /extension\.json.*(symbolic link|changed during verification|cannot read)/i
+    );
+    assert.equal(replaced, true);
+  } finally {
+    fs.openSync = originalOpenSync;
+  }
+});
