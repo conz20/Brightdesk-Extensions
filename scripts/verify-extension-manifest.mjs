@@ -38,11 +38,14 @@ function requireText(value, label, maxLength) {
   if (maxLength !== undefined && Array.from(value).length > maxLength) {
     fail(label + ' must be no more than ' + maxLength + ' characters.');
   }
-  return value.trim();
+  // Preserve the original value: trimming here can turn a manifest token
+  // that the JSON Schema rejects into a different, valid runtime value.
+  return value;
 }
 
 function requireHttps(value, label) {
   const raw = requireText(value, label);
+  if (!raw.startsWith('https://')) fail(label + ' must use the lowercase https:// scheme.');
   let url;
   try { url = new URL(raw); } catch { fail(label + ' must be a valid HTTPS URL.'); }
   if (url.protocol !== 'https:' || url.username || url.password) fail(label + ' must be a valid HTTPS URL without embedded credentials.');
