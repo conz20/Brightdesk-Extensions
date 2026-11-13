@@ -104,8 +104,31 @@ export function verifyExtensionManifest({ rootDir = DEFAULT_ROOT } = {}) {
   if (!manifestStat.isFile()) fail('extension.json must be a regular file.');
 
   let manifest;
-  try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); }
-  catch (error) { fail('cannot read extension.json: ' + error.message); }
+  let manifestHandle = null;
+  try {
+    const flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0);
+    manifestHandle = fs.openSync(manifestPath, flags);
+    const openedStat = fs.fstatSync(manifestHandle);
+    const currentStat = fs.lstatSync(manifestPath);
+    if (!openedStat.isFile()
+        || openedStat.dev !== manifestStat.dev
+        || openedStat.ino !== manifestStat.ino
+        || openedStat.size !== manifestStat.size
+        || currentStat.isSymbolicLink()
+        || !currentStat.isFile()
+        || currentStat.dev !== openedStat.dev
+        || currentStat.ino !== openedStat.ino
+        || currentStat.size !== openedStat.size) {
+      throw new Error('extension.json changed during verification.');
+    }
+    manifest = JSON.parse(fs.readFileSync(manifestHandle, 'utf8'));
+  } catch (error) {
+    fail('cannot read extension.json: ' + error.message);
+  } finally {
+    if (manifestHandle !== null) {
+      try { fs.closeSync(manifestHandle); } catch {}
+    }
+  }
 
   requireObject(manifest, 'manifest');
   const keys = ['manifestVersion', 'id', 'name', 'version', 'description', 'publisher', 'apiVersion', 'supportedProducts', 'entrypoint', 'permissions', 'license'];
