@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_ROOT = process.cwd();
+const MAX_MANIFEST_BYTES = 64 * 1024;
 const PRODUCTS = new Set(['suite', 'pages', 'sheets', 'decks', 'notes', 'database', 'forms', 'lists', 'planner', 'todo', 'workspace']);
 const PERMISSIONS = new Set([
   'workspace.read',
@@ -105,6 +106,9 @@ export function verifyExtensionManifest({ rootDir = DEFAULT_ROOT } = {}) {
   catch (error) { fail('cannot read extension.json: ' + error.message); }
   if (manifestStat.isSymbolicLink()) fail('extension.json must not be a symbolic link.');
   if (!manifestStat.isFile()) fail('extension.json must be a regular file.');
+  if (manifestStat.size > MAX_MANIFEST_BYTES) {
+    fail('extension.json must be no larger than 64 KiB.');
+  }
 
   let manifest;
   let manifestHandle = null;
@@ -114,6 +118,7 @@ export function verifyExtensionManifest({ rootDir = DEFAULT_ROOT } = {}) {
     const openedStat = fs.fstatSync(manifestHandle);
     const currentStat = fs.lstatSync(manifestPath);
     if (!openedStat.isFile()
+        || openedStat.size > MAX_MANIFEST_BYTES
         || openedStat.dev !== manifestStat.dev
         || openedStat.ino !== manifestStat.ino
         || openedStat.size !== manifestStat.size
