@@ -37,6 +37,17 @@ test('valid JavaScript extension manifest passes without running extension code'
   assert.equal(result.executable, false);
 });
 
+test('oversized extension.json manifests are rejected before parsing', t => {
+  const rootDir = fixture(t);
+  const manifestPath = path.join(rootDir, 'extension.json');
+  fs.writeFileSync(manifestPath, ' '.repeat(64 * 1024 + 1));
+
+  assert.throws(
+    () => verifyExtensionManifest({ rootDir }),
+    /extension\\.json must be no larger than 64 KiB/i
+  );
+});
+
 test('unknown or dangerous permissions are rejected', t => {
   const rootDir = fixture(t, manifest => {
     manifest.permissions = [{ id: 'filesystem.root', reason: 'Need every file.' }];
