@@ -294,3 +294,29 @@ test('manifest JSON Schema rejects empty and dot path segments', () => {
   assert.equal(entrypointPattern.test('src/index.js'), true);
   assert.equal(licencePattern.test('licenses/MIT.txt'), true);
 });
+
+
+test('runtime validation rejects whitespace-wrapped manifest tokens instead of normalising them', t => {
+  const cases = [
+    { label: 'manifest.id', mutate: manifest => { manifest.id = ' sample-welcome-panel '; } },
+    { label: 'manifest.version', mutate: manifest => { manifest.version = ' 1.0.0 '; } },
+    { label: 'manifest.apiVersion', mutate: manifest => { manifest.apiVersion = ' 1.0 '; } },
+    { label: 'manifest.supportedProducts', mutate: manifest => { manifest.supportedProducts = [' pages ']; } },
+    { label: 'manifest.permissions[0].id', mutate: manifest => { manifest.permissions[0].id = ' workspace.read '; } },
+    { label: 'manifest.entrypoint.path', mutate: manifest => { manifest.entrypoint.path = ' src/index.js '; } },
+    { label: 'manifest.license.textFile', mutate: manifest => { manifest.license.textFile = ' LICENSE.txt '; } },
+    { label: 'manifest.publisher.url', mutate: manifest => { manifest.publisher.url = ' https://example.org '; } }
+  ];
+
+  for (const scenario of cases) {
+    const rootDir = fixture(t, manifest => {
+      scenario.mutate(manifest);
+      return manifest;
+    });
+    assert.throws(
+      () => verifyExtensionManifest({ rootDir }),
+      /Extension manifest:/,
+      scenario.label + ' must reject surrounding whitespace'
+    );
+  }
+});
