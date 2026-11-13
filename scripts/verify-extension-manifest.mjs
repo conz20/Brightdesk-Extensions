@@ -17,6 +17,8 @@ const PERMISSIONS = new Set([
 ]);
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
+const ENTRYPOINT_PATH_PATTERN = /^(?!\/)(?!.*\.\.)[A-Za-z0-9_/-]+\.(?:js|mjs)$/;
+const LICENSE_TEXT_PATH_PATTERN = /^(?!\/)(?!.*\.\.)[A-Za-z0-9_./-]+$/;
 
 function fail(message) {
   throw new Error('Extension manifest: ' + message);
@@ -31,8 +33,11 @@ function requireKeys(value, allowed, required, label) {
   for (const key of Object.keys(value)) if (!allowed.includes(key)) fail(label + ' contains an unsupported property: ' + key + '.');
 }
 
-function requireText(value, label) {
+function requireText(value, label, maxLength) {
   if (typeof value !== 'string' || value.trim().length === 0) fail(label + ' must be a non-empty string.');
+  if (maxLength !== undefined && Array.from(value).length > maxLength) {
+    fail(label + ' must be no more than ' + maxLength + ' characters.');
+  }
   return value.trim();
 }
 
@@ -78,7 +83,7 @@ function verifyPermissionList(permissions) {
     if (!PERMISSIONS.has(id)) fail(label + '.id permission is not allowlisted: ' + id + '.');
     if (seen.has(id)) fail('duplicate permission: ' + id + '.');
     seen.add(id);
-    requireText(permission.reason, label + '.reason');
+    requireText(permission.reason, label + '.reason', 240);
   }
   return seen.size;
 }
@@ -109,14 +114,14 @@ export function verifyExtensionManifest({ rootDir = DEFAULT_ROOT } = {}) {
 
   const id = requireText(manifest.id, 'manifest.id');
   if (!SLUG.test(id)) fail('manifest.id must use lowercase letters, numbers and single hyphens.');
-  requireText(manifest.name, 'manifest.name');
+  requireText(manifest.name, 'manifest.name', 100);
   const version = requireText(manifest.version, 'manifest.version');
   if (!SEMVER.test(version)) fail('manifest.version must be a valid semantic version.');
-  requireText(manifest.description, 'manifest.description');
+  requireText(manifest.description, 'manifest.description', 240);
 
   requireObject(manifest.publisher, 'manifest.publisher');
   requireKeys(manifest.publisher, ['name', 'url'], ['name', 'url'], 'manifest.publisher');
-  requireText(manifest.publisher.name, 'manifest.publisher.name');
+  requireText(manifest.publisher.name, 'manifest.publisher.name', 100);
   requireHttps(manifest.publisher.url, 'manifest.publisher.url');
 
   const apiVersion = requireText(manifest.apiVersion, 'manifest.apiVersion');
@@ -136,11 +141,15 @@ export function verifyExtensionManifest({ rootDir = DEFAULT_ROOT } = {}) {
   requireObject(manifest.entrypoint, 'manifest.entrypoint');
   requireKeys(manifest.entrypoint, ['type', 'path'], ['type', 'path'], 'manifest.entrypoint');
   if (manifest.entrypoint.type !== 'javascript') fail('entrypoint.type must be javascript; native and binary entrypoints are not accepted.');
-  const entrypointExtension = path.extname(String(manifest.entrypoint.path || '')).toLowerCase();
+  const entrypointPath = requireText(manifest.entrypoint.path, 'manifest.entrypoint.path');
+  if (!ENTRYPOINT_PATH_PATTERN.test(entrypointPath)) {
+    fail('manifest.entrypoint.path must use a schema-approved package path ending in .js or .mjs.');
+  }
+  const entrypointExtension = path.extname(entrypointPath);
   if (!['.js', '.mjs'].includes(entrypointExtension)) {
     fail('manifest.entrypoint.path must be a JavaScript file (.js or .mjs).');
   }
-  const entrypoint = resolvePackageFile(absoluteRoot, manifest.entrypoint.path, 'manifest.entrypoint.path');
+  const entrypoint = resolvePackageFile(absoluteRoot, entrypointPath, 'manifest.entrypoint.path');
 
   const permissionCount = verifyPermissionList(manifest.permissions);
 
@@ -148,7 +157,11 @@ export function verifyExtensionManifest({ rootDir = DEFAULT_ROOT } = {}) {
   requireKeys(manifest.license, ['spdxId', 'textFile'], ['spdxId', 'textFile'], 'manifest.license');
   const spdxId = requireText(manifest.license.spdxId, 'manifest.license.spdxId');
   if (!/^[A-Za-z0-9][A-Za-z0-9.+-]*$/.test(spdxId)) fail('manifest.license.spdxId has an invalid format.');
-  const licenseFile = resolvePackageFile(absoluteRoot, manifest.license.textFile, 'manifest.license.textFile');
+  const licenseTextFile = requireText(manifest.license.textFile, 'manifest.license.textFile');
+  if (!LICENSE_TEXT_PATH_PATTERN.test(licenseTextFile)) {
+    fail('manifest.license.textFile must use a schema-approved package path.');
+  }
+  const licenseFile = resolvePackageFile(absoluteRoot, licenseTextFile, 'manifest.license.textFile');
   if (fs.statSync(licenseFile).size === 0) fail('manifest.license.textFile must not be empty.');
 
   return { id, version, entrypointType: manifest.entrypoint.type, permissionCount, executable: false };
