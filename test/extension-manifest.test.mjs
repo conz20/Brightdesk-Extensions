@@ -44,7 +44,7 @@ test('oversized extension.json manifests are rejected before parsing', t => {
 
   assert.throws(
     () => verifyExtensionManifest({ rootDir }),
-    /extension\\.json must be no larger than 64 KiB/i
+    /extension\.json must be no larger than 64 KiB/i
   );
 });
 
