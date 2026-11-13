@@ -142,14 +142,14 @@ export function verifyExtensionManifest({ rootDir = DEFAULT_ROOT } = {}) {
   requireKeys(manifest.entrypoint, ['type', 'path'], ['type', 'path'], 'manifest.entrypoint');
   if (manifest.entrypoint.type !== 'javascript') fail('entrypoint.type must be javascript; native and binary entrypoints are not accepted.');
   const entrypointPath = requireText(manifest.entrypoint.path, 'manifest.entrypoint.path');
-  if (!ENTRYPOINT_PATH_PATTERN.test(entrypointPath)) {
-    fail('manifest.entrypoint.path must use a schema-approved package path ending in .js or .mjs.');
-  }
-  const entrypointExtension = path.extname(entrypointPath);
+  const entrypointExtension = path.extname(entrypointPath).toLowerCase();
   if (!['.js', '.mjs'].includes(entrypointExtension)) {
     fail('manifest.entrypoint.path must be a JavaScript file (.js or .mjs).');
   }
   const entrypoint = resolvePackageFile(absoluteRoot, entrypointPath, 'manifest.entrypoint.path');
+  if (!ENTRYPOINT_PATH_PATTERN.test(entrypointPath)) {
+    fail('manifest.entrypoint.path must match a schema-approved path (.js or .mjs).');
+  }
 
   const permissionCount = verifyPermissionList(manifest.permissions);
 
@@ -158,10 +158,10 @@ export function verifyExtensionManifest({ rootDir = DEFAULT_ROOT } = {}) {
   const spdxId = requireText(manifest.license.spdxId, 'manifest.license.spdxId');
   if (!/^[A-Za-z0-9][A-Za-z0-9.+-]*$/.test(spdxId)) fail('manifest.license.spdxId has an invalid format.');
   const licenseTextFile = requireText(manifest.license.textFile, 'manifest.license.textFile');
-  if (!LICENSE_TEXT_PATH_PATTERN.test(licenseTextFile)) {
-    fail('manifest.license.textFile must use a schema-approved package path.');
-  }
   const licenseFile = resolvePackageFile(absoluteRoot, licenseTextFile, 'manifest.license.textFile');
+  if (!LICENSE_TEXT_PATH_PATTERN.test(licenseTextFile)) {
+    fail('manifest.license.textFile must match a schema-approved path.');
+  }
   if (fs.statSync(licenseFile).size === 0) fail('manifest.license.textFile must not be empty.');
 
   return { id, version, entrypointType: manifest.entrypoint.type, permissionCount, executable: false };
