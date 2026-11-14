@@ -1,50 +1,19 @@
 # Brightdesk Extensions
 
-Brightdesk Extensions owns the shared manifest, permission and compatibility contracts for possible future extensions to Brightdesk desktop products. It is engineering infrastructure, not an eleventh customer product.
+A controlled, permission-first extension contract for future Brightdesk integrations.
 
-## Current status
+> **Status:** Initial manifest schema and static validator implemented. No extension runtime, loader, marketplace or package distribution is implemented. The example entrypoint is never executed.
 
-The `main` branch currently contains this repository scope document only. The separate draft implementation pull request contains the first versioned manifest schema and static validator:
+## Implemented foundation
 
-- [Draft implementation PR #1](https://github.com/conz20/Brightdesk-Extensions/pull/1)
-- Manifest version 1 schema and JavaScript static validator.
-- A narrow allowlist of declared workspace, document, clipboard and local-notification permissions.
-- Validation of supported Brightdesk products, semantic versions, publisher metadata, package-contained files and local licence text.
-- Regression tests for malformed manifests, unsupported permissions, unsafe paths, symbolic links and Windows drive paths.
+- `schemas/extension-manifest.schema.json` defines version 1 of the manifest contract.
+- `scripts/verify-extension-manifest.mjs` checks required metadata, semantic version, HTTPS publisher URL, supported products, JavaScript-only entrypoints, explicit permission reasons, allowlisted permission IDs, local licence text and safe package-contained paths.
+- The validator rejects symlinked package roots and `extension.json` files, as well as symlinked entrypoint and licence files. Manifest reads use `O_NOFOLLOW` where supported and compare the opened file with the inspected file before parsing. It also rejects path traversal, non-regular files, Windows drive paths, and native or binary entrypoints.
+- `test/extension-manifest.test.mjs` contains 25 regression tests covering valid manifests, malformed SemVer, schema-parity text lengths and path rules (including empty and dot path segments), unsupported permissions, missing reasons, duplicate permissions, unsupported products, unsafe and missing paths, native-code rejection, unexpected properties, symlink boundaries, manifest-path replacement races, whitespace-wrapped manifest tokens and the 64 KiB manifest-size limit.
+- `examples/basic-extension/` contains a static example manifest, source stub and MIT licence text. The source stub is not loaded or executed.
+- `.github/workflows/quality.yml` runs on Node.js 24.22.2 with pinned actions.
 
-The draft implementation has passed its current exact-head macOS ARM64 CI run. It has not been merged into `main`.
-
-There is no extension runtime, loader, SDK, marketplace, package distribution or product integration. The example extension is a static test fixture; its entrypoint is not executed.
-
-## Customer product scope
-
-The approved Brightdesk customer suite contains exactly ten products:
-
-Pages, Sheets, Decks, Notes, Database, Forms, Lists, Planner, To Do and Workspace.
-
-Brightdesk-AI and shared engineering repositories are not additional customer products. AI models, prompts, agents and AI-specific orchestration remain in private Brightdesk-AI.
-
-## Permission and security boundaries
-
-A manifest permission is a declaration, not an implemented capability. A valid manifest does not authorise or execute extension code.
-
-- Extensions must not introduce customer accounts, sign-ins, passwords, profiles, telemetry, advertising, analytics or cloud sync.
-- Extension network access is not an available permission. Customer internet access remains limited to official Brightdesk product updates and Brightdesk-controlled language resources.
-- Do not accept unrestricted filesystem, shell, process, native-module or system access.
-- Do not load untrusted native code in-process.
-- Publisher metadata does not establish publisher identity or trust.
-- Do not distribute or integrate extensions until a host independently implements and tests user consent, capability enforcement, process isolation, resource limits, lifecycle handling, revocation and permission-denial behaviour.
-- Signed provenance, licence review and host compatibility enforcement remain outstanding.
-
-The current draft implementation must remain unmerged until a future host independently implements and passes its enforcement and isolation gates.
-
-## Supported development platforms
-
-Brightdesk customer software is desktop-only: Windows, macOS and Linux. This repository does not create Android, iPhone, iPad or other mobile editions.
-
-## Development
-
-Use Node.js 24.22.2 for the current implementation branch. Its documented checks are:
+## Commands
 
 ~~~sh
 npm ci --no-audit --no-fund
@@ -53,6 +22,30 @@ npm run check
 npm test
 ~~~
 
-These commands apply to the implementation branch, not to the current `main` branch until that implementation is reviewed and merged.
+To verify the sample package from this repository root:
 
-Work on feature branches, add regression tests for behaviour changes, and keep implementation claims tied to the exact commit and its verification results. Do not bypass review or merge gates.
+~~~sh
+cd examples/basic-extension
+node ../../scripts/verify-extension-manifest.mjs
+~~~
+
+## Permission contract
+
+A manifest must request each permission explicitly and provide a reason for that request. The current allowlist is deliberately narrow: workspace read/write, document read/write, clipboard read/write and local notifications. No network permission is available to extensions; customer network access remains restricted to official Brightdesk product updates and approved language resources. Unrecognised permissions are rejected. Empty permission arrays are valid and grant no access.
+
+Permission names are declarations, not enforcement. No extension is loaded, executed or granted these capabilities by this repository. A future host runtime must implement user consent, capability enforcement, isolation, resource limits, lifecycle handling and revocation before any extension code can run.
+
+## Security and release gates
+
+- No broad filesystem, shell, process, native-module or unrestricted system access is accepted by this manifest contract.
+- No untrusted native code is loaded in-process.
+- Publisher URL and name are declarative metadata only; they do not establish identity or trust.
+- Signature/provenance verification, package isolation, host compatibility enforcement and a runtime permission broker remain unimplemented.
+- The example is test data, not an approved distributable extension.
+- Do not publish or integrate extensions until manifest validation, licence review, signature verification, runtime isolation and end-to-end permission-denial tests are complete.
+
+## Boundaries
+
+Brightdesk products own their extension host integration and user experience. Brightdesk Extensions owns the shared manifest and compatibility contracts. AI-specific orchestration stays in Brightdesk-AI. The extension model must not introduce paid services, customer accounts or online dependencies into otherwise local product workflows.
+
+The [Brightdesk developer ecosystem architecture](https://github.com/conz20/Brightdesk-suite/blob/main/docs/DEVELOPER_ECOSYSTEM_ARCHITECTURE.md) remains the source for repository ownership and dependency rules.

@@ -1,0 +1,27 @@
+{
+  "manifestVersion": 1,
+  "id": "sample-welcome-panel",
+  "name": "Sample Welcome Panel",
+  "version": "1.0.0",
+  "description": "A manifest-only example used to demonstrate the extension contract.",
+  "publisher": {
+    "name": "Brightdesk Example Author",
+    "url": "https://example.org"
+  },
+  "apiVersion": "1.0",
+  "supportedProducts": ["pages"],
+  "entrypoint": {
+    "type": "javascript",
+    "path": "src/index.js"
+  },
+  "permissions": [
+    {
+      "id": "workspace.read",
+      "reason": "Read the active workspace title to personalise the panel heading."
+    }
+  ],
+  "license": {
+    "spdxId": "MIT",
+    "textFile": "LICENSE.txt"
+  }
+}
